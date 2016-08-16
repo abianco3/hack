@@ -1,0 +1,70 @@
+body {
+	background-image: url("113.JPG");
+	display: block;
+	min-width: 10000px;
+	background-size: cover;
+}
+
+div {
+	border: 2px solid white;
+	border-radius: 150px;
+	margin: auto;
+	width: 150px;
+	height: 150px;
+	background-color: black;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: transparent;
+}
+
+.drop {
+	position: relative;
+	max-height: max-content;
+	max-width: max-content;
+	margin: 0 auto;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+input {
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+	width: min-content;
+	margin: 0 5% 1%;
+	display: block;
+}
+
+button {
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+	margin: 0 auto;
+	display: block;
+}
+
+div.wiki, div.news {
+	background-size: cover;
+	background-position: center;
+}
+
+/*#circle2::before {
+
+	content: "";
+	height: 30em;
+	width: 0.5em;
+	background-color: #000;
+	transform: translateY(-25%);
+	left: 50em;
+}*/
+
+.link {
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+}
+
+
