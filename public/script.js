@@ -126,11 +126,10 @@ var alchemy = new API ({
 	
 	baseURL : 'http://gateway-a.watsonplatform.net/',
 	api : 'alchemy',
-	apiKey : '##################'
+	apiKey : '0cc036f94105c0c5d39c36790a77146ab27ca3a1'
 
 });
 
-alchemy.queries = {};
 
 alchemy.data = function data (url) {
 
@@ -179,13 +178,13 @@ alchemy.search = function (url, target, click) {
 
 	console.log(this);
 
-	var keywords, sorted, _this;
+	var keywords, _this;
 
 	_this = this;
 
-	keywords = alchemy.data(url);
+	keywords = alchemy.data(url)
 
-	sorted = keywords.then(function(keywords) {
+	.then(function(keywords) {
 			
 		var keys, combine;
 
@@ -218,14 +217,7 @@ alchemy.search = function (url, target, click) {
 		return sorted;
 	});
 
-	sorted.then(function(keywords) {
-
-		_this.queries[target.id] = keywords;
-
-		wiki.link(keywords, target, click);
-
-	});
-
+	return keywords;
 
 };
 
@@ -237,7 +229,6 @@ var wiki = new API ({
 
 });
 
-wiki.queries = {};
 
 wiki.search = function (title) {
 
@@ -302,25 +293,50 @@ wiki.search = function (title) {
 
 };
 
+var times = new API ({
+	
+	baseURL : 'https://api.nytimes.com/svc/search/v2/articlesearch.json',
+	api : 'new york times',
+	apiKey : '626edab52a884bcda6a6bd4b405fa60a'
 
-wiki.link = function (keywords, target, click) {
+});
 
-	var wikiEntry, _this;
+times.search = function (title) {
 
-	wikiEntry = this.search(keywords[click-1]);
+	var uri, params, queries, handler;
 
-	_this = this;
+	uri = this.baseURL;
 
-	wikiEntry.then(function(entry) {
+	queries = {
 
-		console.log(entry);
+		'api-key' : this.apiKey,
 
-		_this.queries[target.id] = {};
+		'q' : title
 
-		_this.queries[target.id][click] = wikiEntry;
+	};
+
+	params = {
+
+		data : queries
+	
+	};
+
+	handler = {
 		
-		makeDiv(entry, target, click);
-	});
+	  success : function(response) {
+	    return JSON.parse(response);
+	  },
+
+	  error : function(reason) {
+	    console.log(reason);
+	  }
+
+    };
+
+    return this.http(uri)
+      .get(params)
+      .then(handler.success, handler.error)
+      .catch(handler.error);
 };
 
 function makeDiv (entry, target, click) {
@@ -337,22 +353,30 @@ function makeDiv (entry, target, click) {
 
 	nextDiv.className = /wiki/.test(target.className) ? 'wiki ' + click: 'news ' + click;
 
-	nextDiv.style.top = '34.86em';
+	var offsetTop = parseInt(nextDiv.style.top.replace('em', ''));
+
+	var offsetRight = parseInt(nextDiv.style.right.replace('em', '')) || 0;
+
+	console.log(offsetRight);
+
+	nextDiv.style.top = target.id === 'button1' ? '34.86em' : offsetTop + 34.86 + 'em';
 
 	if (click==='2') {
 
-		nextDiv.style.left = '34.86em';
+		nextDiv.style.right = target.id === 'button1' ? '-34.86em' : offsetRight - 34.86 + 'em';
 	}
 
 	if (click==='3') {
 
-		nextDiv.style.right = '34.86em';
+		nextDiv.style.right = target.id === 'button1' ? '34.86em' : offsetRight + 34.86 + 'em';
 
 	}
 
 	console.log(nextDiv);
 
-	page = entry.query.pages[entry.query.pageids[0]];
+	page = /wiki/.test(target.className) ? entry.query.pages[entry.query.pageids[0]] : entry;
+
+	console.log(page);
 
 	button = document.createElement('button');
 
@@ -360,14 +384,24 @@ function makeDiv (entry, target, click) {
 
 	button.id = identity ? 'button' + identity : 'button 2';
 
-	button.className = /wiki/.test(target.className) ? 'link news 1' : 'link wiki 1';
+	button.className = /wiki/.test(target.className) ? 'link news 0' : 'link wiki 0';
 
-	button.name = 'https://en.wikipedia.org/wiki/' + page.title;
+	button.name = /wiki/.test(target.className) ? 'https://en.wikipedia.org/wiki/' + page.title : page.web_url;
 
 	button.addEventListener('click', listener);
 
 
-	nextDiv.style.backgroundImage = 'url("' + page.thumbnail.original + '")';
+	try {
+		nextDiv.style.backgroundImage = /wiki/.test(target.className) ? 'url("' + page.thumbnail.original + '")' : 
+	'url("https://static01.nyt.com/' + page.multimedia[1].url +'")';
+	}
+
+	catch (e) {
+		console.log(e);
+		nextDiv.style.backgroundImage = 'none';
+	}
+
+	nextDiv.title = /wiki/.test(target.className) ? page.title : page.headline.main;
 
 	nextDiv.appendChild(button);
 
@@ -387,39 +421,91 @@ function listener (event) {
 
 
 	if (target.classList.contains('wiki') === true) {
-
-		if (click === '1') {
 			
-			url = document.getElementById('searchUrl').value;
+		if(click === '0') {
+
+			window.open(target.name);
+		}
+
+		if ('1' <= click && click <= '3') {
+
+			url = target.name || document.getElementById('searchUrl').value;
 
 			console.log(url);
 
-			alchemy.search(url, target, click);
+			var links = alchemy.search(url, target, click)
+			.then(function(keywords) {
+				var wikis = keywords.map(function(keyword) {
+					return wiki.search(keyword);
+				});
 
-
-		}
-
-		if ('1' < click && click <= '3') {
+				return wikis;
+			})
+			.then(function(wikis) {
 			
-			var keywords = alchemy.queries[target.id];
+				return Promise.all(wikis)
+			
+				.then(function(wikis){
+				
+					return wikis.filter(function(wiki) {
+						console.log(wiki);
+						var pageId = wiki.query.pageids[0];
+						var page = wiki.query.pages[pageId];
+					
+						return page.thumbnail;
+				
+					});
+				});
+			
+			});
 
-			console.log(keywords);
+			links.then(function(filteredWikis) {
+			
+				makeDiv(filteredWikis[parseInt(click)-1], target, click);
+			});
 
-			wiki.link(keywords, target, click);
+		}
 		
+			target.className = 'link wiki ' + (parseInt(click) + 1);
+
+			console.log(target.className);
+
+	}
+
+	if (target.classList.contains('news') === true) {
+
+		if (click ==='0') {
+
+			window.open(target.name);
+
 		}
 
-		target.className = 'link wiki ' + (parseInt(click) + 1);
+		if ('1' <= click && click <= '3') {
+
+			var title = target.parentNode.title;
+
+			console.log(title);
+
+			var news = times.search(title);
+
+			news.then(function(results) {
+
+				console.log(results);
+
+				var result = results.response.docs[parseInt(click) - 1];
+
+				makeDiv(result, target, click);
+
+			});
+
+		}
+
+		target.className = 'link news ' + (parseInt(click) + 1);
 
 		console.log(target.className);
 
 	}
 
-	if (target.classList.contains('news') === true && click === '1') {
-
-		window.open(target.name);
-
-	}
 
 }
 
