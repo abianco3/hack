@@ -1,10 +1,17 @@
-var http = require('http');
-var router = require('./router');
+var express = require('express');
 
-var port = process.env.PORT;
-var ip = process.env.IP;
+var app = express();
 
-var server = http.createServer(router.handleRequest);
+app.use(express.static('public'));
 
-console.log("Listening on http://" + ip + ":" + port);
-server.listen(port, ip);
+/*app.get('/', function (req, res) {
+  res.sendFile('public/index_alt.html', {root : '/Users/administrator/Sites/hack'});
+});
+
+app.post('/', function (req, res) {
+  res.sendFile('public/index_alt.html', {root: '/Users/administrator/Sites/hack'});
+});*/
+
+var port = 8080;
+
+var server = app.listen(port);

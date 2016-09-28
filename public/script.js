@@ -126,7 +126,7 @@ var alchemy = new API ({
 	
 	baseURL : 'http://gateway-a.watsonplatform.net/',
 	api : 'alchemy',
-	apiKey : '0cc036f94105c0c5d39c36790a77146ab27ca3a1'
+	apiKey : 'a426cc16207269a76ec3bd51f0711dffd1783d4d'
 
 });
 
@@ -173,8 +173,57 @@ alchemy.data = function data (url) {
 
 };
 
+alchemy.news = function (searchTerm) {
 
-alchemy.search = function (url, target, click) {
+	var uri, params, queries, handler;
+
+
+	uri = this.baseURL + 'calls/data/GetNews';
+
+	
+	queries = {
+
+		'q.enriched.url.enrichedTitle.keywords.keyword.text' : searchTerm,
+
+		start : 'now-10d',
+
+		end : 'now',
+
+		count : '10',
+
+		return : 'enriched.url.title,enriched.url.url,enriched.url.image',
+
+		apikey : this.apiKey,
+
+		outputMode : 'json'
+
+	};
+
+	
+	params = {data : queries};
+
+
+	handler = {
+		
+		success : function(response) {
+			return JSON.parse(response);
+		},
+
+		error : function(reason) {
+			console.log(reason);
+		}
+
+	};
+
+  return this.http(uri)
+         .get(params)
+         .then(handler.success, handler.error)
+         .catch(handler.error);
+
+};
+
+
+alchemy.search = function (url) {
 
 	console.log(this);
 
@@ -339,101 +388,189 @@ times.search = function (title) {
       .catch(handler.error);
 };
 
-function makeDiv (entry, target, click) {
 
-	var parent, nextDiv, anchor, button, page, identity;
+function makeDiv (entries, target) {
 
-	console.log(click);
-
-	identity = parseInt(target.id.slice(-1)) + 1;
+	var parent, nextDiv, anchor, button, page;
 
 	parent = target.parentElement;
 
-	nextDiv = parent.cloneNode();
+	nextDiv = document.createElement('DIV');
 
-	nextDiv.className = /wiki/.test(target.className) ? 'wiki ' + click: 'news ' + click;
+	nextDiv.className = 'list';
 
-	var offsetTop = parseInt(nextDiv.style.top.replace('em', ''));
+	var list = document.createElement('UL');
 
-	var offsetRight = parseInt(nextDiv.style.right.replace('em', '')) || 0;
+	for (var i = 0; i < entries.length; i++) {
 
-	console.log(offsetRight);
+		var item = document.createElement('LI');
 
-	nextDiv.style.top = target.id === 'button1' ? '34.86em' : offsetTop + 34.86 + 'em';
+		var entry = entries[i];
 
-	if (click==='2') {
+		var link = document.createElement('DIV');
 
-		nextDiv.style.right = target.id === 'button1' ? '-34.86em' : offsetRight - 34.86 + 'em';
+		link.className = 'circle';
+
+		page = /news/.test(target.className) ? entry.query.pages[entry.query.pageids[0]] : entry;
+
+		console.log(page);
+
+		button = document.createElement('button');
+
+		button.type = 'button';
+
+		button.id = i;
+
+		button.className = /wiki/.test(target.className) ? 'news child' : 'wiki child';
+
+		button.name = /news/.test(target.className) ? 'https://en.wikipedia.org/wiki/' + page.title : page.url;
+
+		button.addEventListener('click', listener);
+
+
+		try {
+			link.style.backgroundImage = /news/.test(target.className) ? 'url("' + page.thumbnail.original + '")' : 
+		/*'url("https://static01.nyt.com/' + page.multimedia[1].url +'")'*/ 'url("' + page.image + '")';
+		}
+
+		catch (e) {
+			console.log(e);
+			try {
+				link.style.backgroundImage = page.multimedia[0].url;
+			}
+			catch (e){
+				console.log(e);
+				link.style.backgroundImage = 'none';
+			}
+		}
+
+		link.title = /news/.test(target.className) ? page.title : page.title;
+
+		link.appendChild(button);
+
+		item.appendChild(link);
+
+		list.appendChild(item);
 	}
 
-	if (click==='3') {
-
-		nextDiv.style.right = target.id === 'button1' ? '34.86em' : offsetRight + 34.86 + 'em';
-
-	}
-
-	console.log(nextDiv);
-
-	page = /wiki/.test(target.className) ? entry.query.pages[entry.query.pageids[0]] : entry;
-
-	console.log(page);
-
-	button = document.createElement('button');
-
-	button.type = 'button';
-
-	button.id = identity ? 'button' + identity : 'button 2';
-
-	button.className = /wiki/.test(target.className) ? 'link news 0' : 'link wiki 0';
-
-	button.name = /wiki/.test(target.className) ? 'https://en.wikipedia.org/wiki/' + page.title : page.web_url;
-
-	button.addEventListener('click', listener);
-
-
-	try {
-		nextDiv.style.backgroundImage = /wiki/.test(target.className) ? 'url("' + page.thumbnail.original + '")' : 
-	'url("https://static01.nyt.com/' + page.multimedia[1].url +'")';
-	}
-
-	catch (e) {
-		console.log(e);
-		nextDiv.style.backgroundImage = 'none';
-	}
-
-	nextDiv.title = /wiki/.test(target.className) ? page.title : page.headline.main;
-
-	nextDiv.appendChild(button);
+	nextDiv.appendChild(list);
 
 	document.body.appendChild(nextDiv);
 
+	var listDiv = document.body.lastElementChild;
+
+	var wrapper = document.createElement('DIV');
+
+	wrapper.className = 'wrapper';
+
+
+	var forLines = listDiv.firstElementChild.childNodes;
+
+	forLines.forEach(function (node, index) {
+		var line = document.createElement('DIV');
+
+		line.className = 'vertical-line' + ' ' + index;
+
+		wrapper.appendChild(line);
+
+	});
+
+	listDiv.insertBefore(wrapper, listDiv.firstElementChild);
+
+	forLines.forEach(function (node, index) {
+		var x1, x2, y1, y2, parentCoor, childCoor, line;
+
+		line = node.closest('div').firstElementChild.childNodes[index];
+
+		parentCoor = parent.getBoundingClientRect();
+
+		console.log(parentCoor);
+
+		childCoor = node.getBoundingClientRect();
+
+		console.log(childCoor);
+
+		x1 = (parentCoor.right - parentCoor.left) / 2 + parentCoor.left;
+
+		console.log(x1);
+
+		y1 = parentCoor.bottom;
+
+		console.log(y1);
+
+		x2 = (childCoor.right - childCoor.left) / 2 + childCoor.left;
+
+		console.log(x2);
+
+		y2 = childCoor.top;
+
+		console.log(y2);
+
+		rotateLine (x1, y1, x2, y2, line);
+	});
+}
+
+function rotateLine (x1, y1, x2, y2, line) {
+
+	var length, angle, transform;
+
+	length = Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+
+	angle = Math.asin((x1 - x2) / length) * 180 / Math.PI;
+
+	transform = 'rotate('+angle+'deg)';
+
+	console.log(transform);
+
+	console.log(length.toString());
+
+	line.style.height = length.toString() + 'px';
+
+	line.style.transform = transform;
+
+	console.log(line);
 }
 
 function listener (event) {
 
-	var url, target, click;
+	var url, target, links, title, news, choices, newClass, lines;
 
 	target = event.target;
 
-	click = target.className.slice(-1);
 
-	console.log(click);
-
-
-	if (target.classList.contains('wiki') === true) {
+	if (target.classList.contains('selected') === true) {
 			
-		if(click === '0') {
+		if (target.id !== 'button1') {
+			var newWindow = window.open(target.name);
 
-			window.open(target.name);
+			newWindow.blur();
+
+			window.focus();
+
+			if (target.closest('div.list').nextSibling !== null) {
+
+				function removeSiblings (element) {
+					if (element.nextSibling !== null) {
+						element.nextSibling.remove();
+						var removed = element;
+						removeSiblings(removed);
+					}
+				}
+
+				removeSiblings(target.closest('div.list'));
+			}
 		}
 
-		if ('1' <= click && click <= '3') {
+		
+		
+
+		if (target.classList.contains('news') === true) {
 
 			url = target.name || document.getElementById('searchUrl').value;
 
 			console.log(url);
 
-			var links = alchemy.search(url, target, click)
+			links = alchemy.search(url)
 			.then(function(keywords) {
 				var wikis = keywords.map(function(keyword) {
 					return wiki.search(keyword);
@@ -448,65 +585,115 @@ function listener (event) {
 				.then(function(wikis){
 				
 					return wikis.filter(function(wiki) {
+						
+						try {
 						console.log(wiki);
-						var pageId = wiki.query.pageids[0];
-						var page = wiki.query.pages[pageId];
+						var pageId, page;
+						pageId = wiki.query.pageids[0];
+						page = wiki.query.pages[pageId];
 					
 						return page.thumbnail;
-				
+						}
+						catch (e) {
+							console.log(e);
+						}
 					});
 				});
 			
 			});
 
 			links.then(function(filteredWikis) {
-			
-				makeDiv(filteredWikis[parseInt(click)-1], target, click);
+				
+				var randomWikis, weight, i, j;
+
+				randomWikis = [];
+
+				weight = function(num) {
+					return num * num;
+				};
+
+				for (i = 0; i < 3; i++) {
+					j = Math.floor(weight(Math.random()) * filteredWikis.length);
+					randomWikis.push(filteredWikis[j]);
+					filteredWikis.splice(j, 1);
+				}
+
+				makeDiv(randomWikis, target);
 			});
-
-		}
-		
-			target.className = 'link wiki ' + (parseInt(click) + 1);
-
-			console.log(target.className);
-
-	}
-
-	if (target.classList.contains('news') === true) {
-
-		if (click ==='0') {
-
-			window.open(target.name);
-
 		}
 
-		if ('1' <= click && click <= '3') {
+		if (target.classList.contains('wiki') === true) {
 
-			var title = target.parentNode.title;
+			title = target.parentNode.title;
 
 			console.log(title);
 
-			var news = times.search(title);
+			/*news = times.search(title)
+			.then(function(results) {
+				return results.response.docs;
+			});*/
 
-			news.then(function(results) {
+			news = alchemy.news(title)
+			.then(function(result) {
+				console.log(result);
+				return result.result.docs.map
+				(function (article) {
+					return article.source.enriched.url;
+				});
+			});
 
-				console.log(results);
+			return news.then(function(articles) {
 
-				var result = results.response.docs[parseInt(click) - 1];
+				console.log(articles);
 
-				makeDiv(result, target, click);
+				var choices, weight, i, j;
+
+				choices = [];
+
+				weight = function(num) {
+					return num * num;
+				};
+
+				for (i = 0; i < 3; i++) {
+					j = Math.floor(weight(Math.random()) * articles.length);
+					choices.push(articles[j]);
+					articles.splice(j, 1);
+				}
+
+				makeDiv(choices, target);
 
 			});
 
 		}
-
-		target.className = 'link news ' + (parseInt(click) + 1);
-
-		console.log(target.className);
-
 	}
 
+	if (target.classList.contains('child') === true) {
 
+		choices = target.closest('ul').childNodes;
+
+		lines = target.closest('.list').firstElementChild.childNodes;
+
+		newClass = target.className.replace('child', 'selected');
+
+		target.className = newClass;
+
+		for (var i = 0; i < choices.length; i++) {
+			console.log(choices[i].firstChild.firstChild.id);
+
+			if(i !== 1) {
+				lines[i].style.visibility = 'hidden';
+			}
+
+			if (choices[i].firstChild.firstChild.id != target.id) {
+				choices[i].style.display = 'none';
+			}
+
+			else {
+				choices[i].style.float = 'none';
+			}
+		}
+
+	}
 }
 
 document.addEventListener('DOMContentLoaded', function () {
