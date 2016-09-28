@@ -12,6 +12,6 @@ app.post('/', function (req, res) {
   res.sendFile('public/index_alt.html', {root: '/Users/administrator/Sites/hack'});
 });*/
 
-var port = 8080;
+var port = process.env.PORT || 8080;
 
 var server = app.listen(port);
