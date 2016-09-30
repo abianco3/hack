@@ -1,0 +1,8 @@
+# ignore
+
+/keys
+public/*old*
+
+# Comment out for Heroku
+public/*.jpg
+node_modules/
