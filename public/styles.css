@@ -1,6 +1,7 @@
 body {
 	background-image: url("113.JPG");
 	background-size: cover;
+	background-attachment: fixed;
 	font-size: 16px;
 }
 
@@ -13,6 +14,10 @@ body {
 	margin: 0 auto;
 	background-size: cover;
 	background-position: cover;
+}
+
+#start {
+	margin-top: 25%;
 }
  
 .list {
@@ -76,19 +81,9 @@ div.wrapper {
 	width: fit-content;
 	display: flex;
 	flex-direction: row;
+	justify-content: center;
 	margin: 0 auto;
 	padding: 0;
 	max-height: 200px;
 }
-
-
-/*#circle2::before {
-
-	content: "";
-	height: 30em;
-	width: 0.5em;
-	background-color: #000;
-	transform: translateY(-25%);
-	left: 50em;
-}*/
 

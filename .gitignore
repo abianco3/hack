@@ -1,6 +1,8 @@
 # ignore
 
 /keys
+/.eslintrc.js
+/.git
 public/*old*
 
 # Comment out for Heroku
