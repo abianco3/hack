@@ -143,7 +143,7 @@ alchemy.search = function search(url) {
       return keys[b].length - keys[a].length;
     });
 
-    return sorted;
+    return sorted.slice(0, 20);
   });
 
   return result;
@@ -290,6 +290,7 @@ guardian.search = function search(title) {
     q: title,
     'show-elements': 'image',
     'show-fields': 'thumbnail',
+    'order-by': 'relevance',
   };
 
   const params = {
@@ -380,7 +381,7 @@ const listener = function listener(event) {
       // alchemy api find the keywords
       const links = alchemy.search(url)
       .then((keywords) => {
-        //wiki api finds wikipedia pages
+        // wiki api finds wikipedia pages
         const wikis = keywords.map((keyword) => {
           return wiki.search(keyword);
         });
