@@ -28,7 +28,7 @@ API.prototype.http = function http(url) {
         let count = 0;
         const data = params.data;
         uri += '?';
-        for (const key in data) {
+        for (var key in data) {
           if (data.hasOwnProperty(key)) {
             if (count > 0) {
               uri += '&';
@@ -44,7 +44,7 @@ API.prototype.http = function http(url) {
       if (params.headers) {
         const headers = params.headers;
 
-        for (const key in headers) {
+        for (var key in headers) {
           if (headers.hasOwnProperty(key)) {
             xhr.setRequestHeader(key, headers[key]);
           }
@@ -130,7 +130,7 @@ alchemy.search = function search(url) {
       }
     };
 
-    for (const i in keywords) {
+    for (var i in keywords) {
       if (keywords.hasOwnProperty(i)) {
         if (Array.isArray(keywords[i])) {
           keywords[i].forEach(combine);
