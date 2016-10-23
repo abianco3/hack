@@ -85,7 +85,7 @@ API.prototype.http = function http(url) {
 
 
 const alchemy = new API({
-  baseURL: 'http://gateway-a.watsonplatform.net/',
+  baseURL: 'https://gateway-a.watsonplatform.net/',
   api: 'alchemy',
   apiKey: 'a426cc16207269a76ec3bd51f0711dffd1783d4d',
 });
@@ -277,7 +277,7 @@ wiki.url = function url(image) {
 
 
 const guardian = new API({
-  baseURL: 'http://content.guardianapis.com/search',
+  baseURL: 'https://content.guardianapis.com/search',
   api: 'guardian',
   apiKey: 'b854df1e-b811-460a-8846-7443f3f95b6e',
 });
